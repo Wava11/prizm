@@ -1,9 +1,11 @@
 import { Stage } from "../stage";
 import { find, propEq } from 'ramda';
 
+
 export interface Process {
     name: string;
     stages: Stage[];
+    transitions: Transition[];
 }
 
 export const constructProcess = async (processName: string): Promise<Process> => {
@@ -11,10 +13,16 @@ export const constructProcess = async (processName: string): Promise<Process> =>
     const processStages: Stage[] = await getStages(processName, allObserevedStagesNamesOfProcess);
     const processInstances: ProcessInstance[] = await getProcessInstances(processName);
 
-    // TODO: think about splits in the process
-    const processNextStagesMap: Map<StageName, Set<StageName>> = generateNextStagesMap(processStages, processInstances);
+    const processStagesNames = processStages.map(stage => stage.name);
+    const processNextStagesMap: Map<StageName, Set<StageName>> = generateNextStagesMap(processStagesNames, processInstances);
 
-    const processFlows: ProcessInstance[] = calculateProcessFlows(processNextStagesMap);
+    const transitions: Transition[] = generateTransitions(processNextStagesMap);
+
+    return {
+        name: processName,
+        stages: processStages,
+        transitions
+    };
 };
 
 /**
@@ -22,6 +30,8 @@ export const constructProcess = async (processName: string): Promise<Process> =>
  */
 type ProcessInstance = StageName[];
 type StageName = Stage["name"];
+type Transition = [StageName, StageName];
+
 
 export function generateNextStagesMap(processStagesNames: StageName[], processInstances: ProcessInstance[]): Map<string, Set<string>> {
     const map = new Map<string, Set<StageName>>(
@@ -38,3 +48,9 @@ export function generateNextStagesMap(processStagesNames: StageName[], processIn
 
     return map;
 }
+const generateTransitions = (processNextStagesMap: Map<string, Set<string>>): Transition[] =>
+    Array.from(processNextStagesMap).flatMap(([stageName, nextStagesNames]) =>
+        Array.from(nextStagesNames).map((nextStageName): Transition =>
+            [stageName, nextStageName]
+        )
+    );
