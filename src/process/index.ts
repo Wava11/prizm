@@ -14,15 +14,7 @@ export const constructProcess = async (processName: string): Promise<Process> =>
     const processInstances: ProcessInstance[] = await getProcessInstances(processName);
 
     const processStagesNames = processStages.map(stage => stage.name);
-    const processNextStagesMap: Map<StageName, Set<StageName>> = generateNextStagesMap(processStagesNames, processInstances);
-
-    const transitions: Transition[] = generateTransitions(processNextStagesMap);
-
-    return {
-        name: processName,
-        stages: processStages,
-        transitions
-    };
+    return constructProcessFrom(processStagesNames, processInstances, processName, processStages);
 };
 
 /**
@@ -33,7 +25,7 @@ type StageName = Stage["name"];
 type Transition = [StageName, StageName];
 
 
-export function generateNextStagesMap(processStagesNames: StageName[], processInstances: ProcessInstance[]): Map<string, Set<string>> {
+export const generateNextStagesMap = (processStagesNames: StageName[], processInstances: ProcessInstance[]): Map<string, Set<string>> => {
     const map = new Map<string, Set<StageName>>(
         processStagesNames.map(stageName => [stageName, new Set<StageName>()])
     );
@@ -47,10 +39,23 @@ export function generateNextStagesMap(processStagesNames: StageName[], processIn
     );
 
     return map;
-}
-const generateTransitions = (processNextStagesMap: Map<string, Set<string>>): Transition[] =>
+};
+
+export const generateTransitions = (processNextStagesMap: Map<string, Set<string>>): Transition[] =>
     Array.from(processNextStagesMap).flatMap(([stageName, nextStagesNames]) =>
         Array.from(nextStagesNames).map((nextStageName): Transition =>
             [stageName, nextStageName]
         )
     );
+const constructProcessFrom = (processStagesNames: string[], processInstances: ProcessInstance[], processName: string, processStages: Stage[]) => {
+    const processNextStagesMap: Map<StageName, Set<StageName>> = generateNextStagesMap(processStagesNames, processInstances);
+
+    const transitions: Transition[] = generateTransitions(processNextStagesMap);
+
+    return {
+        name: processName,
+        stages: processStages,
+        transitions
+    };
+}
+

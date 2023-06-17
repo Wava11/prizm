@@ -1,6 +1,6 @@
-import { generateNextStagesMap } from ".";
+import { generateNextStagesMap, generateTransitions } from ".";
 
-console.log(generateNextStagesMap(["a", "b", "c", "d"], [
+console.log(generateTransitions(generateNextStagesMap(["a", "b", "c", "d"], [
     ["c", "d"],
     ["c", "d"],
     ["b", "c"],
@@ -9,4 +9,4 @@ console.log(generateNextStagesMap(["a", "b", "c", "d"], [
     ["b", "c"],
     ["a", "b", "c"],
     ["d"],
-]));
+])));
